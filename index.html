@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Data Entry - Google Sheets Integration</title>
+    <style>
+        :root {
+            --bg: #f0f4f8;
+            --card-bg: #ffffff;
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+            --input-bg: #f8fafc;
+            --success: #10b981;
+            --error: #ef4444;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 20px 40px -8px rgba(0, 0, 0, 0.15);
+            --radius: 16px;
+            --radius-sm: 10px;
+            --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #e8edf5 0%, #dce3ed 30%, #eef2f7 60%, #e4e9f3 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -180px;
+            right: -120px;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(79, 70, 229, 0.08) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+            animation: floatOrb 12s ease-in-out infinite;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            bottom: -200px;
+            left: -150px;
+            width: 550px;
+            height: 550px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.06) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+            animation: floatOrb 15s ease-in-out infinite reverse;
+        }
+
+        @keyframes floatOrb {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(40px, -30px) scale(1.08); }
+            50% { transform: translate(-20px, 25px) scale(0.94); }
+            75% { transform: translate(-35px, -20px) scale(1.05); }
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 40px 36px;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(4px);
+            transition: var(--transition);
+        }
+
+        .card:hover {
+            box-shadow: 0 25px 50px -10px rgba(0, 0, 0, 0.18);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .icon-wrapper {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+            margin-bottom: 16px;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15);
+        }
+
+        .icon-wrapper svg {
+            width: 28px;
+            height: 28px;
+            color: var(--primary);
+            stroke-width: 2;
+        }
+
+        .header h1 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--text);
+            letter-spacing: -0.02em;
+            margin-bottom: 6px;
+        }
+
+        .header p {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            font-weight: 400;
+        }
+
+        .google-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #f1f5f9;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            color: #475569;
+            margin-top: 10px;
+            font-weight: 500;
+        }
+
+        .google-badge .dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #34a853;
+            animation: pulse-dot 2s infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(52, 168, 83, 0.5); }
+            50% { box-shadow: 0 0 0 10px rgba(52, 168, 83, 0); }
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 7px;
+            letter-spacing: 0.01em;
+        }
+
+        .form-group label .required {
+            color: var(--error);
+            margin-left: 2px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper .input-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            pointer-events: none;
+            transition: var(--transition);
+            width: 18px;
+            height: 18px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 13px 14px 13px 44px;
+            font-size: 0.95rem;
+            font-family: inherit;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--input-bg);
+            color: var(--text);
+            transition: var(--transition);
+            outline: none;
+            letter-spacing: 0.01em;
+        }
+
+        .form-group input::placeholder {
+            color: #b0bcc9;
+            font-weight: 400;
+        }
+
+        .form-group input:focus {
+            border-color: var(--primary);
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.08);
+        }
+
+        .input-wrapper:focus-within .input-icon {
+            color: var(--primary);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        @media (max-width: 480px) {
+            .form-row { grid-template-columns: 1fr; }
+            .card { padding: 28px 20px; border-radius: 12px; }
+            .header h1 { font-size: 1.35rem; }
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 14px 20px;
+            font-size: 1rem;
+            font-weight: 600;
+            font-family: inherit;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: var(--transition);
+            letter-spacing: 0.01em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .submit-btn:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(79, 70, 229, 0.3);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+            transition: 0.1s;
+        }
+
+        .submit-btn:disabled {
+            background: #a5b4fc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .submit-btn .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2.5px solid #fff;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        .submit-btn.loading .spinner { display: block; }
+        .submit-btn.loading .btn-text { display: none; }
+        .submit-btn.loading .btn-icon { display: none; }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .toast {
+            position: fixed;
+            top: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-120px);
+            z-index: 1000;
+            padding: 14px 24px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            letter-spacing: 0.01em;
+            color: #fff;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .toast.show { transform: translateX(-50%) translateY(0); }
+        .toast.success { background: #059669; }
+        .toast.error { background: #dc2626; }
+
+        .entry-counter {
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-top: 20px;
+            font-weight: 500;
+        }
+
+        .entry-counter span {
+            background: #eef2ff;
+            padding: 3px 10px;
+            border-radius: 12px;
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        .setup-banner {
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            border-radius: var(--radius-sm);
+            padding: 14px 16px;
+            margin-bottom: 20px;
+            font-size: 0.8rem;
+            color: #92400e;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            line-height: 1.5;
+            transition: all 0.3s;
+            display: none;
+        }
+
+        .setup-banner.hidden-banner { display: none; }
+        .setup-banner .warn-icon { flex-shrink: 0; margin-top: 1px; }
+        .setup-banner button.close-banner {
+            background: none;
+            border: none;
+            color: #92400e;
+            cursor: pointer;
+            font-size: 1.1rem;
+            margin-left: auto;
+            flex-shrink: 0;
+            opacity: 0.7;
+            padding: 0 4px;
+        }
+        .setup-banner button.close-banner:hover { opacity: 1; }
+    </style>
+</head>
+<body>
+
+    <div class="toast" id="toast">
+        <span id="toastIcon">✓</span>
+        <span id="toastMsg"></span>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <div class="header">
+                <div class="icon-wrapper">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="3" ry="3"/>
+                        <line x1="9" y1="9" x2="15" y2="9"/>
+                        <line x1="9" y1="13" x2="15" y2="13"/>
+                        <line x1="9" y1="17" x2="12" y2="17"/>
+                    </svg>
+                </div>
+                <h1>Student Data Entry</h1>
+                <p>Fill in the details below to save to Google Sheets</p>
+                <div class="google-badge">
+                    <span class="dot"></span> Connected to Google Spreadsheet
+                </div>
+            </div>
+
+            <div class="setup-banner" id="setupBanner" style="display: none;">
+                <span class="warn-icon">⚠️</span>
+                <span><strong>Setup needed:</strong> Configure your Google Apps Script Web App URL in the code.</span>
+                <button class="close-banner" onclick="document.getElementById('setupBanner').style.display='none'" title="Dismiss">×</button>
+            </div>
+
+            <form id="studentForm" novalidate>
+                <div class="form-group">
+                    <label for="name">Full Name <span class="required">*</span></label>
+                    <div class="input-wrapper">
+                        <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                        <input type="text" id="name" placeholder="e.g. John Doe" required autocomplete="name">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="university">University <span class="required">*</span></label>
+                    <div class="input-wrapper">
+                        <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 10v6M2 10l10-7 10 7-10 7z"/>
+                            <path d="M6 12v5c0 1.1 2.7 2 6 2s6-.9 6-2v-5"/>
+                        </svg>
+                        <input type="text" id="university" placeholder="e.g. Harvard University" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="registration">Registration <span class="required">*</span></label>
+                        <div class="input-wrapper">
+                            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="4" width="18" height="16" rx="2"/>
+                                <line x1="7" y1="8" x2="17" y2="8"/>
+                                <line x1="7" y1="12" x2="17" y2="12"/>
+                                <line x1="7" y1="16" x2="13" y2="16"/>
+                            </svg>
+                            <input type="text" id="registration" placeholder="e.g. REG-2024-001" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="mark">Mark <span class="required">*</span></label>
+                        <div class="input-wrapper">
+                            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                            </svg>
+                            <input type="number" id="mark" placeholder="e.g. 85" required min="0" max="100" step="0.01">
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    <svg class="btn-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                        <polyline points="17 21 17 13 7 13 7 21"/>
+                        <polyline points="7 3 7 8 15 8"/>
+                    </svg>
+                    <span class="btn-text">Save to Google Sheets</span>
+                    <span class="spinner"></span>
+                </button>
+            </form>
+
+            <div class="entry-counter">
+                📊 Entries submitted this session: <span id="entryCount">0</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            // ============================================
+            // 🔧 YOUR NEW GOOGLE SCRIPT URL (UPDATED)
+            // ============================================
+            const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbynZZnbRXh71IHj2YOTYs7FxtnTwPpqgMAwyiThKCKEsooCpu-xgO7H3PI5YQX91Oz0Lg/exec';
+
+            const form = document.getElementById('studentForm');
+            const submitBtn = document.getElementById('submitBtn');
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toastMsg');
+            const toastIcon = document.getElementById('toastIcon');
+            const entryCountSpan = document.getElementById('entryCount');
+            const setupBanner = document.getElementById('setupBanner');
+
+            let entryCount = 0;
+            let toastTimer = null;
+
+            setupBanner.style.display = 'none';
+
+            function showToast(message, type = 'success') {
+                if (toastTimer) clearTimeout(toastTimer);
+                toast.className = 'toast ' + type;
+                toastMsg.textContent = message;
+                toastIcon.textContent = type === 'success' ? '✓' : '✕';
+                toast.offsetHeight;
+                toast.classList.add('show');
+                toastTimer = setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 3500);
+            }
+
+            function setLoading(isLoading) {
+                if (isLoading) {
+                    submitBtn.classList.add('loading');
+                    submitBtn.disabled = true;
+                } else {
+                    submitBtn.classList.remove('loading');
+                    submitBtn.disabled = false;
+                }
+            }
+
+            async function sendToGoogleSheets(data) {
+                const formData = new URLSearchParams();
+                formData.append('name', data.name);
+                formData.append('university', data.university);
+                formData.append('registration', data.registration);
+                formData.append('mark', data.mark);
+                formData.append('timestamp', new Date().toISOString());
+
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'Accept': 'application/json' }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Server responded with status: ${response.status}`);
+                }
+
+                const contentType = response.headers.get('content-type') || '';
+                if (contentType.includes('application/json')) {
+                    return await response.json();
+                } else {
+                    return { raw: await response.text() };
+                }
+            }
+
+            function validateMark(mark) {
+                const num = parseFloat(mark);
+                return !isNaN(num) && num >= 0 && num <= 100;
+            }
+
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                const name = document.getElementById('name').value.trim();
+                const university = document.getElementById('university').value.trim();
+                const registration = document.getElementById('registration').value.trim();
+                const mark = document.getElementById('mark').value.trim();
+
+                if (!name || !university || !registration || mark === '') {
+                    showToast('Please fill in all required fields.', 'error');
+                    return;
+                }
+
+                if (!validateMark(mark)) {
+                    showToast('Mark must be a number between 0 and 100.', 'error');
+                    document.getElementById('mark').focus();
+                    return;
+                }
+
+                const studentData = {
+                    name, university, registration,
+                    mark: parseFloat(mark).toFixed(2)
+                };
+
+                setLoading(true);
+                try {
+                    await sendToGoogleSheets(studentData);
+                    entryCount++;
+                    entryCountSpan.textContent = entryCount;
+                    showToast('✅ Successfully saved to Google Sheets!', 'success');
+                    form.reset();
+                    document.getElementById('name').focus();
+                    entryCountSpan.style.transform = 'scale(1.3)';
+                    entryCountSpan.style.transition = 'transform 0.3s ease';
+                    setTimeout(() => {
+                        entryCountSpan.style.transform = 'scale(1)';
+                    }, 300);
+                } catch (error) {
+                    console.error(error);
+                    showToast('❌ Failed to save. Check console or your Apps Script deployment.', 'error');
+                } finally {
+                    setLoading(false);
+                }
+            });
+
+            document.getElementById('mark').addEventListener('input', function() {
+                const val = parseFloat(this.value);
+                if (this.value !== '' && (isNaN(val) || val < 0 || val > 100)) {
+                    this.style.borderColor = '#ef4444';
+                    this.style.boxShadow = '0 0 0 4px rgba(239,68,68,0.08)';
+                } else {
+                    this.style.borderColor = '';
+                    this.style.boxShadow = '';
+                }
+            });
+
+            document.getElementById('name').focus();
+            console.log('✅ Form ready. Connected to:', GOOGLE_SCRIPT_URL);
+        })();
+    </script>
+</body>
+</html>
