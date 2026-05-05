@@ -1,465 +1,515 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Data Entry - Google Sheets Integration</title>
-    <style>
-        :root {
-            --bg: #f0f4f8;
-            --card-bg: #ffffff;
-            --primary: #4f46e5;
-            --primary-hover: #4338ca;
-            --text: #1e293b;
-            --text-light: #64748b;
-            --border: #e2e8f0;
-            --input-bg: #f8fafc;
-            --success: #10b981;
-            --error: #ef4444;
-            --shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
-            --shadow-lg: 0 20px 40px -8px rgba(0,0,0,0.15);
-            --radius: 16px;
-            --radius-sm: 10px;
-            --transition: 0.25s cubic-bezier(0.4,0,0.2,1);
-        }
-        *{margin:0;padding:0;box-sizing:border-box;}
-        body {
-            font-family: 'Inter','Segoe UI',system-ui,-apple-system,sans-serif;
-            background: linear-gradient(135deg,#e8edf5 0%,#dce3ed 30%,#eef2f7 60%,#e4e9f3 100%);
-            background-attachment: fixed;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            position: relative;
-            overflow-x: hidden;
-        }
-        body::before {
-            content:'';position:fixed;top:-180px;right:-120px;width:500px;height:500px;
-            background:radial-gradient(circle,rgba(79,70,229,0.08) 0%,transparent 70%);
-            border-radius:50%;pointer-events:none;z-index:0;animation:floatOrb 12s ease-in-out infinite;
-        }
-        body::after {
-            content:'';position:fixed;bottom:-200px;left:-150px;width:550px;height:550px;
-            background:radial-gradient(circle,rgba(99,102,241,0.06) 0%,transparent 70%);
-            border-radius:50%;pointer-events:none;z-index:0;animation:floatOrb 15s ease-in-out infinite reverse;
-        }
-        @keyframes floatOrb {
-            0%,100%{transform:translate(0,0) scale(1);}
-            25%{transform:translate(40px,-30px) scale(1.08);}
-            50%{transform:translate(-20px,25px) scale(0.94);}
-            75%{transform:translate(-35px,-20px) scale(1.05);}
-        }
-        .container{position:relative;z-index:1;width:100%;max-width:500px;}
-        .card {
-            background:var(--card-bg);border-radius:var(--radius);padding:40px 36px;
-            box-shadow:var(--shadow-lg);border:1px solid rgba(255,255,255,0.6);
-            backdrop-filter:blur(4px);transition:var(--transition);
-        }
-        .card:hover{box-shadow:0 25px 50px -10px rgba(0,0,0,0.18);}
-        .header{text-align:center;margin-bottom:32px;}
-        .icon-wrapper {
-            display:inline-flex;align-items:center;justify-content:center;
-            width:56px;height:56px;border-radius:16px;
-            background:linear-gradient(135deg,#eef2ff 0%,#e0e7ff 100%);
-            margin-bottom:16px;box-shadow:0 4px 12px rgba(79,70,229,0.15);
-        }
-        .icon-wrapper svg{width:28px;height:28px;color:var(--primary);stroke-width:2;}
-        .header h1{font-size:1.6rem;font-weight:700;color:var(--text);letter-spacing:-0.02em;margin-bottom:6px;}
-        .header p{font-size:0.9rem;color:var(--text-light);font-weight:400;}
-        .google-badge {
-            display:inline-flex;align-items:center;gap:6px;background:#f1f5f9;
-            padding:6px 14px;border-radius:20px;font-size:0.78rem;color:#475569;margin-top:10px;font-weight:500;
-        }
-        .google-badge .dot{width:7px;height:7px;border-radius:50%;background:#34a853;animation:pulse-dot 2s infinite;}
-        @keyframes pulse-dot{0%,100%{box-shadow:0 0 0 0 rgba(52,168,83,0.5);}50%{box-shadow:0 0 0 10px rgba(52,168,83,0);}}
-        .form-group{margin-bottom:20px;position:relative;}
-        .form-group label{display:block;font-size:0.85rem;font-weight:600;color:var(--text);margin-bottom:7px;letter-spacing:0.01em;}
-        .form-group label .required{color:var(--error);margin-left:2px;}
-        .input-wrapper{position:relative;}
-        .input-wrapper .input-icon {
-            position:absolute;left:14px;top:50%;transform:translateY(-50%);
-            color:#94a3b8;pointer-events:none;transition:var(--transition);width:18px;height:18px;
-        }
-        .form-group input, .form-group select {
-            width:100%;padding:13px 14px 13px 44px;font-size:0.95rem;font-family:inherit;
-            border:2px solid var(--border);border-radius:var(--radius-sm);background:var(--input-bg);
-            color:var(--text);transition:var(--transition);outline:none;letter-spacing:0.01em;
-            appearance:none;-webkit-appearance:none;
-        }
-        .form-group select{cursor:pointer;padding-right:40px;}
-        .form-group select option{padding:8px;}
-        .form-group select option[value=""]{color:#b0bcc9;}
-        .form-group input::placeholder{color:#b0bcc9;font-weight:400;}
-        .form-group input:focus,.form-group select:focus {
-            border-color:var(--primary);background:#fff;box-shadow:0 0 0 4px rgba(79,70,229,0.08);
-        }
-        .input-wrapper:focus-within .input-icon{color:var(--primary);}
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Exam Portal</title>
+<style>
+:root {
+  --primary: #4f46e5;
+  --primary-dark: #3730a3;
+  --primary-light: #eef2ff;
+  --success: #059669;
+  --success-light: #d1fae5;
+  --error: #dc2626;
+  --error-light: #fee2e2;
+  --warning: #d97706;
+  --warning-light: #fef3c7;
+  --text: #111827;
+  --text-muted: #6b7280;
+  --border: #e5e7eb;
+  --bg: #f9fafb;
+  --card: #ffffff;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter','Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:24px 16px;}
+h1,h2,h3{font-weight:600;}
 
-        /* Custom select arrow */
-        .select-arrow {
-            position:absolute;right:14px;top:50%;transform:translateY(-50%);
-            pointer-events:none;color:#94a3b8;transition:var(--transition);
-        }
-        .input-wrapper:focus-within .select-arrow{color:var(--primary);}
+.page{max-width:680px;margin:0 auto;}
 
-        /* Student badge shown after selection */
-        .student-badge {
-            display:none;align-items:center;gap:8px;margin-top:8px;
-            background:#eef2ff;border:1px solid #c7d2fe;border-radius:8px;
-            padding:8px 12px;font-size:0.82rem;color:#4338ca;font-weight:600;
-        }
-        .student-badge.show{display:flex;}
-        .student-badge .avatar {
-            width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#818cf8);
-            display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.75rem;font-weight:700;flex-shrink:0;
-        }
+/* ── Header ── */
+.exam-header{text-align:center;margin-bottom:32px;padding:32px 24px;background:var(--card);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);}
+.exam-logo{width:52px;height:52px;background:var(--primary-light);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;}
+.exam-logo svg{width:26px;height:26px;stroke:var(--primary);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.exam-header h1{font-size:1.5rem;color:var(--text);margin-bottom:6px;}
+.exam-header p{font-size:0.875rem;color:var(--text-muted);}
+.status-pill{display:inline-flex;align-items:center;gap:6px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:20px;padding:5px 14px;font-size:0.78rem;color:#15803d;font-weight:500;margin-top:12px;}
+.status-dot{width:7px;height:7px;border-radius:50%;background:#22c55e;animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.4;}}
 
-        /* Duplicate warning */
-        .duplicate-warning {
-            display:none;align-items:center;gap:8px;margin-top:8px;
-            background:#fff1f2;border:1px solid #fecdd3;border-radius:8px;
-            padding:8px 12px;font-size:0.82rem;color:#be123c;font-weight:600;
-        }
-        .duplicate-warning.show{display:flex;}
+/* ── Card ── */
+.card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);padding:28px 28px;margin-bottom:20px;}
+.card-title{font-size:0.95rem;font-weight:600;color:var(--text);margin-bottom:20px;display:flex;align-items:center;gap:8px;}
+.card-title svg{width:18px;height:18px;stroke:var(--primary);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.step-badge{background:var(--primary);color:#fff;font-size:0.7rem;font-weight:700;padding:2px 8px;border-radius:10px;margin-left:auto;}
 
-        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-        @media(max-width:480px){
-            .form-row{grid-template-columns:1fr;}
-            .card{padding:28px 20px;border-radius:12px;}
-            .header h1{font-size:1.35rem;}
-        }
-        .submit-btn {
-            width:100%;padding:14px 20px;font-size:1rem;font-weight:600;font-family:inherit;
-            background:var(--primary);color:#fff;border:none;border-radius:var(--radius-sm);
-            cursor:pointer;transition:var(--transition);letter-spacing:0.01em;
-            display:flex;align-items:center;justify-content:center;gap:8px;
-            margin-top:8px;position:relative;overflow:hidden;
-        }
-        .submit-btn:hover{background:var(--primary-hover);transform:translateY(-2px);box-shadow:0 8px 24px rgba(79,70,229,0.3);}
-        .submit-btn:active{transform:translateY(0);box-shadow:0 4px 12px rgba(79,70,229,0.2);transition:0.1s;}
-        .submit-btn:disabled{background:#a5b4fc;cursor:not-allowed;transform:none;box-shadow:none;}
-        .submit-btn .spinner{display:none;width:20px;height:20px;border:2.5px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin 0.7s linear infinite;}
-        .submit-btn.loading .spinner{display:block;}
-        .submit-btn.loading .btn-text{display:none;}
-        .submit-btn.loading .btn-icon{display:none;}
-        @keyframes spin{to{transform:rotate(360deg);}}
-        .toast {
-            position:fixed;top:24px;left:50%;transform:translateX(-50%) translateY(-120px);
-            z-index:1000;padding:14px 24px;border-radius:30px;font-weight:600;font-size:0.9rem;
-            letter-spacing:0.01em;color:#fff;box-shadow:0 12px 30px rgba(0,0,0,0.2);
-            transition:transform 0.4s cubic-bezier(0.175,0.885,0.32,1.275);
-            pointer-events:none;display:flex;align-items:center;gap:8px;white-space:nowrap;
-        }
-        .toast.show{transform:translateX(-50%) translateY(0);}
-        .toast.success{background:#059669;}
-        .toast.error{background:#dc2626;}
-        .entry-counter{text-align:center;font-size:0.8rem;color:var(--text-light);margin-top:20px;font-weight:500;}
-        .entry-counter span{background:#eef2ff;padding:3px 10px;border-radius:12px;color:var(--primary);font-weight:700;}
-    </style>
+/* ── Form Elements ── */
+label{display:block;font-size:0.82rem;font-weight:600;color:var(--text);margin-bottom:6px;}
+.required{color:var(--error);margin-left:2px;}
+.input-wrap{position:relative;}
+.input-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:17px;height:17px;stroke:var(--text-muted);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;pointer-events:none;transition:stroke 0.2s;}
+.input-wrap:focus-within .input-icon{stroke:var(--primary);}
+select,input[type=text],input[type=number],input[type=password]{
+  width:100%;padding:11px 12px 11px 40px;font-size:0.9rem;font-family:inherit;
+  border:1.5px solid var(--border);border-radius:var(--radius-sm);background:#fafafa;
+  color:var(--text);outline:none;transition:border-color 0.2s,box-shadow 0.2s,background 0.2s;
+  -webkit-appearance:none;appearance:none;
+}
+select:focus,input:focus{border-color:var(--primary);background:#fff;box-shadow:0 0 0 3px rgba(79,70,229,0.1);}
+input[readonly]{background:#f3f4f6;color:var(--text-muted);cursor:not-allowed;}
+input[readonly]:focus{border-color:var(--border);box-shadow:none;}
+.select-chevron{position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;width:16px;height:16px;stroke:var(--text-muted);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.form-group{margin-bottom:18px;}
+
+/* ── PIN input ── */
+#pinInput{letter-spacing:0.2em;font-weight:600;font-size:1.1rem;}
+.pin-hint{font-size:0.78rem;color:var(--text-muted);margin-top:5px;}
+.pin-error{font-size:0.78rem;color:var(--error);margin-top:5px;display:none;}
+.pin-error.show{display:block;}
+
+/* ── Verify Btn ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 20px;font-size:0.9rem;font-weight:600;font-family:inherit;border:none;border-radius:var(--radius-sm);cursor:pointer;transition:all 0.2s;letter-spacing:0.01em;}
+.btn-primary{background:var(--primary);color:#fff;width:100%;}
+.btn-primary:hover{background:var(--primary-dark);transform:translateY(-1px);box-shadow:var(--shadow-md);}
+.btn-primary:active{transform:translateY(0);}
+.btn-primary:disabled{background:#a5b4fc;cursor:not-allowed;transform:none;box-shadow:none;}
+.btn svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.spinner{display:none;width:18px;height:18px;border:2.5px solid rgba(255,255,255,0.4);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;}
+.btn.loading .spinner{display:block;}
+.btn.loading .btn-label{display:none;}
+.btn.loading .btn-icon{display:none;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ── Unlocked info ── */
+.info-banner{display:flex;align-items:center;gap:10px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:var(--radius-sm);padding:12px 16px;font-size:0.85rem;color:#15803d;font-weight:500;margin-bottom:20px;}
+.info-banner svg{width:18px;height:18px;flex-shrink:0;stroke:#16a34a;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+
+/* ── Timer ── */
+.timer-bar{display:flex;align-items:center;justify-content:space-between;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 18px;margin-bottom:20px;box-shadow:var(--shadow);}
+.timer-label{font-size:0.82rem;color:var(--text-muted);font-weight:500;}
+.timer-val{font-size:1.1rem;font-weight:700;color:var(--primary);font-variant-numeric:tabular-nums;}
+.timer-val.warn{color:var(--warning);}
+.timer-val.danger{color:var(--error);}
+.progress-track{flex:1;height:6px;background:var(--border);border-radius:3px;margin:0 16px;overflow:hidden;}
+.progress-fill{height:100%;background:var(--primary);border-radius:3px;transition:width 1s linear,background 0.3s;}
+.progress-fill.warn{background:var(--warning);}
+.progress-fill.danger{background:var(--error);}
+
+/* ── MCQ ── */
+.question-card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);padding:22px 24px;margin-bottom:14px;transition:box-shadow 0.2s;}
+.question-card:hover{box-shadow:var(--shadow-md);}
+.q-header{display:flex;align-items:flex-start;gap:12px;margin-bottom:16px;}
+.q-num{width:30px;height:30px;border-radius:50%;background:var(--primary-light);display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:var(--primary);flex-shrink:0;}
+.q-text{font-size:0.92rem;font-weight:500;line-height:1.5;color:var(--text);}
+.options{display:flex;flex-direction:column;gap:8px;}
+.option{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:var(--radius-sm);border:1.5px solid var(--border);cursor:pointer;transition:all 0.15s;font-size:0.875rem;color:var(--text);}
+.option:hover{border-color:var(--primary);background:var(--primary-light);}
+.option.selected{border-color:var(--primary);background:var(--primary-light);font-weight:500;}
+.option.correct{border-color:var(--success);background:var(--success-light);color:#065f46;}
+.option.wrong{border-color:var(--error);background:var(--error-light);color:#7f1d1d;}
+.option.show-correct{border-color:var(--success);background:var(--success-light);color:#065f46;}
+.option input[type=radio]{accent-color:var(--primary);width:16px;height:16px;flex-shrink:0;cursor:pointer;}
+.option-label{flex:1;line-height:1.4;}
+.option-badge{font-size:0.7rem;font-weight:700;padding:2px 7px;border-radius:6px;margin-left:auto;flex-shrink:0;}
+.badge-correct{background:#d1fae5;color:#065f46;}
+.badge-wrong{background:#fee2e2;color:#7f1d1d;}
+
+.unanswered-mark{border-color:var(--warning)!important;background:var(--warning-light)!important;}
+
+/* ── Score ── */
+.score-box{text-align:center;padding:32px 24px;background:var(--card);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow-lg);margin-bottom:20px;}
+.score-circle{width:100px;height:100px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 20px;border:4px solid;}
+.score-circle.excellent{border-color:var(--success);background:var(--success-light);}
+.score-circle.good{border-color:var(--primary);background:var(--primary-light);}
+.score-circle.average{border-color:var(--warning);background:var(--warning-light);}
+.score-circle.poor{border-color:var(--error);background:var(--error-light);}
+.score-num{font-size:1.6rem;font-weight:700;}
+.score-denom{font-size:0.78rem;font-weight:500;color:var(--text-muted);}
+.score-box h2{font-size:1.2rem;margin-bottom:6px;}
+.score-box p{font-size:0.85rem;color:var(--text-muted);}
+.mark-pill{display:inline-flex;align-items:center;gap:8px;background:#eef2ff;border:1px solid #c7d2fe;border-radius:20px;padding:8px 18px;font-size:0.88rem;color:#3730a3;font-weight:600;margin-top:14px;}
+
+/* ── Submit section ── */
+.submit-area{text-align:center;}
+.submit-note{font-size:0.8rem;color:var(--text-muted);margin-top:10px;}
+
+/* ── Toast ── */
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-100px);z-index:999;padding:12px 22px;border-radius:24px;font-weight:600;font-size:0.875rem;color:#fff;box-shadow:var(--shadow-lg);transition:transform 0.35s cubic-bezier(0.175,0.885,0.32,1.275);display:flex;align-items:center;gap:8px;white-space:nowrap;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+.toast.s{background:#059669;}
+.toast.e{background:#dc2626;}
+
+/* ── Section visibility ── */
+.hidden{display:none!important;}
+
+/* ── Progress indicator ── */
+.exam-progress{font-size:0.8rem;color:var(--text-muted);text-align:right;margin-bottom:12px;}
+.exam-progress span{color:var(--primary);font-weight:600;}
+
+@media(max-width:480px){
+  .form-row{grid-template-columns:1fr;}
+  .card{padding:20px 18px;}
+}
+</style>
 </head>
 <body>
-    <div class="toast" id="toast">
-        <span id="toastIcon">✓</span>
-        <span id="toastMsg"></span>
+
+<div class="toast" id="toast"></div>
+
+<div class="page">
+  <!-- Header -->
+  <div class="exam-header">
+    <div class="exam-logo">
+      <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+    </div>
+    <h1>Online Exam Portal</h1>
+    <p>Select your name and enter your PIN to begin</p>
+    <div class="status-pill"><span class="status-dot"></span> Connected to Google Sheets</div>
+  </div>
+
+  <!-- Step 1: Identity -->
+  <div class="card" id="identityCard">
+    <div class="card-title">
+      <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Student Identity
+      <span class="step-badge">Step 1</span>
     </div>
 
-    <div class="container">
-        <div class="card">
-            <div class="header">
-                <div class="icon-wrapper">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="3" y="3" width="18" height="18" rx="3" ry="3"/>
-                        <line x1="9" y1="9" x2="15" y2="9"/>
-                        <line x1="9" y1="13" x2="15" y2="13"/>
-                        <line x1="9" y1="17" x2="12" y2="17"/>
-                    </svg>
-                </div>
-                <h1>Student Data Entry</h1>
-                <p>Fill in the details below to save to Google Sheets</p>
-                <div class="google-badge">
-                    <span class="dot"></span> Connected to Google Spreadsheet
-                </div>
-            </div>
-
-            <form id="studentForm" novalidate>
-
-                <!-- Feature 1: Name Selector -->
-                <div class="form-group">
-                    <label for="name">Student Name <span class="required">*</span></label>
-                    <div class="input-wrapper">
-                        <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                            <circle cx="12" cy="7" r="4"/>
-                        </svg>
-                        <select id="name" required>
-                            <option value="">— Select your name —</option>
-                            <option value="Nayeem Islam Nishad">1. Nayeem Islam Nishad</option>
-                            <option value="Kawser Ahmed">2. Kawser Ahmed</option>
-                            <option value="Siddat Raj">3. Siddat Raj</option>
-                        </select>
-                        <svg class="select-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="6 9 12 15 18 9"/>
-                        </svg>
-                    </div>
-                    <!-- Shows selected student card -->
-                    <div class="student-badge" id="studentBadge">
-                        <div class="avatar" id="studentAvatar"></div>
-                        <span id="studentBadgeText"></span>
-                    </div>
-                    <!-- Feature 2: Duplicate warning -->
-                    <div class="duplicate-warning" id="duplicateWarning">
-                        🚫 <span id="duplicateMsg"></span>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="university">University <span class="required">*</span></label>
-                    <div class="input-wrapper">
-                        <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M22 10v6M2 10l10-7 10 7-10 7z"/>
-                            <path d="M6 12v5c0 1.1 2.7 2 6 2s6-.9 6-2v-5"/>
-                        </svg>
-                        <input type="text" id="university" placeholder="e.g. Harvard University" required>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="registration">Registration <span class="required">*</span></label>
-                        <div class="input-wrapper">
-                            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="3" y="4" width="18" height="16" rx="2"/>
-                                <line x1="7" y1="8" x2="17" y2="8"/>
-                                <line x1="7" y1="12" x2="17" y2="12"/>
-                                <line x1="7" y1="16" x2="13" y2="16"/>
-                            </svg>
-                            <input type="text" id="registration" placeholder="e.g. REG-2024-001" required>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="mark">Mark <span class="required">*</span></label>
-                        <div class="input-wrapper">
-                            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-                            </svg>
-                            <input type="number" id="mark" placeholder="e.g. 85" required min="0" max="100" step="0.01">
-                        </div>
-                    </div>
-                </div>
-
-                <button type="submit" class="submit-btn" id="submitBtn">
-                    <svg class="btn-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-                        <polyline points="17 21 17 13 7 13 7 21"/>
-                        <polyline points="7 3 7 8 15 8"/>
-                    </svg>
-                    <span class="btn-text">Save to Google Sheets</span>
-                    <span class="spinner"></span>
-                </button>
-            </form>
-
-            <div class="entry-counter">
-                📊 Entries submitted this session: <span id="entryCount">0</span>
-            </div>
-        </div>
+    <div class="form-group">
+      <label for="nameSelect">Your Name <span class="required">*</span></label>
+      <div class="input-wrap">
+        <svg class="input-icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <select id="nameSelect">
+          <option value="">— Select your name —</option>
+          <option value="Nayeem Islam Nishad">1. Nayeem Islam Nishad</option>
+          <option value="Kawser Ahmed">2. Kawser Ahmed</option>
+          <option value="Siddat Raj">3. Siddat Raj</option>
+        </select>
+        <svg class="select-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
     </div>
 
-    <script>
-    (function() {
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbymtz83_hL-bnrTLPc1eCHoGU0b74wH3s22f15Uk_YwfZwfcQ1bpifhLrTMmvAEFlrU/exec';
+    <div class="form-group" id="pinGroup" style="display:none;">
+      <label for="pinInput">Exam PIN <span class="required">*</span></label>
+      <div class="input-wrap">
+        <svg class="input-icon" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <input type="password" id="pinInput" placeholder="Enter your PIN" maxlength="10" autocomplete="off">
+      </div>
+      <div class="pin-hint">Enter the PIN assigned to you by your instructor.</div>
+      <div class="pin-error" id="pinError">Incorrect PIN. Please try again.</div>
+    </div>
 
-        // ── Feature 2: track submitted names THIS session ──
-        const submittedThisSession = new Set();
+    <div class="form-group hidden" id="regDisplay">
+      <label>Registration Number</label>
+      <div class="input-wrap">
+        <svg class="input-icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="7" y1="8" x2="17" y2="8"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="7" y1="16" x2="13" y2="16"/></svg>
+        <input type="text" id="regInput" readonly>
+      </div>
+    </div>
 
-        const form         = document.getElementById('studentForm');
-        const submitBtn    = document.getElementById('submitBtn');
-        const toast        = document.getElementById('toast');
-        const toastMsg     = document.getElementById('toastMsg');
-        const toastIcon    = document.getElementById('toastIcon');
-        const entryCountEl = document.getElementById('entryCount');
-        const nameSelect   = document.getElementById('name');
-        const studentBadge = document.getElementById('studentBadge');
-        const studentAvatar= document.getElementById('studentAvatar');
-        const studentBadgeText = document.getElementById('studentBadgeText');
-        const dupWarning   = document.getElementById('duplicateWarning');
-        const dupMsg       = document.getElementById('duplicateMsg');
+    <button class="btn btn-primary hidden" id="verifyBtn" onclick="verifyPin()">
+      <svg class="btn-icon" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      <span class="btn-label">Verify & Start Exam</span>
+      <span class="spinner"></span>
+    </button>
+  </div>
 
-        let entryCount = 0, toastTimer = null;
+  <!-- Step 2: Exam -->
+  <div id="examSection" class="hidden">
+    <div class="info-banner">
+      <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      <span>Identity verified — Good luck, <strong id="studentName2"></strong>!</span>
+    </div>
 
-        // ── Feature 1: show badge + check duplicate on name change ──
-        nameSelect.addEventListener('change', function() {
-            const val = this.value;
-            dupWarning.classList.remove('show');
+    <div class="timer-bar">
+      <span class="timer-label">Time Remaining</span>
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      <span class="timer-val" id="timerVal">15:00</span>
+    </div>
 
-            if (!val) {
-                studentBadge.classList.remove('show');
-                submitBtn.disabled = false;
-                return;
-            }
+    <div class="exam-progress">Answered: <span id="answeredCount">0</span> / 10</div>
 
-            // Avatar initials
-            const initials = val.split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase();
-            studentAvatar.textContent = initials;
-            studentBadgeText.textContent = val + ' — selected ✓';
-            studentBadge.classList.add('show');
+    <div id="questionsContainer"></div>
 
-            // Feature 2: check session duplicate immediately
-            if (submittedThisSession.has(val)) {
-                dupMsg.textContent = val + ' has already submitted. Only one attempt is allowed.';
-                dupWarning.classList.add('show');
-                studentBadge.classList.remove('show');
-                submitBtn.disabled = true;
-            } else {
-                submitBtn.disabled = false;
-            }
-        });
+    <div class="submit-area">
+      <button class="btn btn-primary" onclick="submitExam()" style="max-width:320px;margin:0 auto;">
+        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Submit Exam
+      </button>
+      <p class="submit-note">Once submitted, you cannot change your answers.</p>
+    </div>
+  </div>
 
-        function showToast(msg, type='success') {
-            if (toastTimer) clearTimeout(toastTimer);
-            toast.className = 'toast ' + type;
-            toastMsg.textContent = msg;
-            toastIcon.textContent = type === 'success' ? '✓' : '✕';
-            toast.offsetHeight;
-            toast.classList.add('show');
-            toastTimer = setTimeout(() => toast.classList.remove('show'), 3500);
-        }
+  <!-- Step 3: Results -->
+  <div id="resultsSection" class="hidden">
+    <div class="score-box" id="scoreBox">
+      <div class="score-circle" id="scoreCircle">
+        <span class="score-num" id="scoreNum"></span>
+        <span class="score-denom">/10</span>
+      </div>
+      <h2 id="scoreTitle"></h2>
+      <p id="scoreMsg"></p>
+      <div class="mark-pill">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Obtained Mark: <strong id="obtainedMark"></strong> / 100
+      </div>
+    </div>
 
-        function setLoading(on) {
-            submitBtn.classList.toggle('loading', on);
-            submitBtn.disabled = on;
-        }
+    <div class="card">
+      <div class="card-title">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Answer Review
+      </div>
+      <div id="reviewContainer"></div>
+    </div>
+  </div>
 
-        async function checkAlreadySubmitted(name) {
-            // Ask the Apps Script if this name exists in the sheet
-            const url = GOOGLE_SCRIPT_URL + '?check=' + encodeURIComponent(name);
-            try {
-                const res = await fetch(url, { method: 'GET', headers: { 'Accept': 'application/json' } });
-                if (!res.ok) return false;
-                const ct = res.headers.get('content-type') || '';
-                if (ct.includes('application/json')) {
-                    const data = await res.json();
-                    // Apps Script should return { exists: true/false }
-                    return data.exists === true;
-                }
-            } catch (_) {}
-            return false;
-        }
+</div>
 
-        async function sendToGoogleSheets(data) {
-            const fd = new URLSearchParams();
-            fd.append('name',         data.name);
-            fd.append('university',   data.university);
-            fd.append('registration', data.registration);
-            fd.append('mark',         data.mark);
-            fd.append('timestamp',    new Date().toISOString());
+<script>
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyKq5mdwGFoMr2nsGRYnqp8_O0eKehH_eFplii4bupNl8AILErwqkoqh8_6Rmbg6bap3g/exec';
 
-            const res = await fetch(GOOGLE_SCRIPT_URL, {
-                method: 'POST',
-                body: fd,
-                headers: { 'Accept': 'application/json' }
-            });
-            if (!res.ok) throw new Error('HTTP ' + res.status);
-            const ct = res.headers.get('content-type') || '';
-            const result = ct.includes('application/json') ? await res.json() : { raw: await res.text() };
+const STUDENTS = {
+  'Nayeem Islam Nishad': { pin: '1234', reg: 'REG-2024-001' },
+  'Kawser Ahmed':        { pin: '5678', reg: 'REG-2024-002' },
+  'Siddat Raj':          { pin: '9012', reg: 'REG-2024-003' }
+};
 
-            // ── HARD BLOCK: server said duplicate ──
-            if (result.status === 'duplicate') {
-                throw { isDuplicate: true, name: data.name };
-            }
-            return result;
-        }
+const QUESTIONS = [
+  { q: 'What is the full form of HTTP?', opts: ['HyperText Transfer Protocol','High Transfer Text Protocol','HyperText Transmission Process','Hybrid Text Transfer Protocol'], ans: 0 },
+  { q: 'Which data structure works on LIFO principle?', opts: ['Queue','Stack','Linked List','Tree'], ans: 1 },
+  { q: 'What does CPU stand for?', opts: ['Central Processing Unit','Computer Processing Utility','Core Processing Unit','Central Program Utility'], ans: 0 },
+  { q: 'Which language is used for web page structure?', opts: ['CSS','JavaScript','HTML','Python'], ans: 2 },
+  { q: 'What is the binary value of decimal 10?', opts: ['1010','1100','1001','0110'], ans: 0 },
+  { q: 'Which sorting algorithm has the best average-case complexity?', opts: ['Bubble Sort','Insertion Sort','Quick Sort','Selection Sort'], ans: 2 },
+  { q: 'What does RAM stand for?', opts: ['Read Access Memory','Random Access Memory','Rapid Application Memory','Read And Modify'], ans: 1 },
+  { q: 'Which protocol is used for email sending?', opts: ['FTP','HTTP','SMTP','POP3'], ans: 2 },
+  { q: 'What is the primary key in a database?', opts: ['A key that can be null','A key that uniquely identifies a record','A foreign key reference','An encrypted key'], ans: 1 },
+  { q: 'Which company developed the Java programming language?', opts: ['Microsoft','Apple','Sun Microsystems','Google'], ans: 2 }
+];
 
-        function validateMark(v) {
-            const n = parseFloat(v);
-            return !isNaN(n) && n >= 0 && n <= 100;
-        }
+const TOTAL_TIME = 15 * 60;
+let timerInterval = null, timeLeft = TOTAL_TIME;
+let currentStudent = null, answers = new Array(10).fill(null);
+let submitted = new Set(), examActive = false;
 
-        form.addEventListener('submit', async function(e) {
-            e.preventDefault();
+const $ = id => document.getElementById(id);
 
-            const name         = nameSelect.value.trim();
-            const university   = document.getElementById('university').value.trim();
-            const registration = document.getElementById('registration').value.trim();
-            const mark         = document.getElementById('mark').value.trim();
+function showToast(msg, type='s') {
+  const t = $('toast');
+  t.className = 'toast ' + type;
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3200);
+}
 
-            if (!name || !university || !registration || mark === '') {
-                showToast('Please fill in all required fields.', 'error'); return;
-            }
-            if (!validateMark(mark)) {
-                showToast('Mark must be a number between 0 and 100.', 'error');
-                document.getElementById('mark').focus(); return;
-            }
+$('nameSelect').addEventListener('change', function() {
+  const v = this.value;
+  $('pinGroup').style.display = v ? 'block' : 'none';
+  $('pinInput').value = '';
+  $('pinError').classList.remove('show');
+  $('regDisplay').classList.add('hidden');
+  $('verifyBtn').classList.toggle('hidden', !v);
+});
 
-            // ── Feature 2: session-level duplicate block ──
-            if (submittedThisSession.has(name)) {
-                dupMsg.textContent = name + ' has already submitted. Only one attempt is allowed.';
-                dupWarning.classList.add('show');
-                studentBadge.classList.remove('show');
-                submitBtn.disabled = true;
-                showToast('🚫 ' + name + ' already submitted!', 'error');
-                return;
-            }
+$('pinInput').addEventListener('keydown', e => { if(e.key==='Enter') verifyPin(); });
 
-            setLoading(true);
-            try {
-                // ── Feature 2: server-level duplicate check ──
-                const alreadyInSheet = await checkAlreadySubmitted(name);
-                if (alreadyInSheet) {
-                    submittedThisSession.add(name); // sync session
-                    dupMsg.textContent = name + ' has already submitted. Only one attempt is allowed.';
-                    dupWarning.classList.add('show');
-                    studentBadge.classList.remove('show');
-                    submitBtn.disabled = true;
-                    showToast('🚫 ' + name + ' already has a submission!', 'error');
-                    setLoading(false);
-                    return;
-                }
+function verifyPin() {
+  const name = $('nameSelect').value;
+  const pin  = $('pinInput').value.trim();
+  if (!name || !pin) { showToast('Please select a name and enter PIN.', 'e'); return; }
 
-                await sendToGoogleSheets({ name, university, registration, mark: parseFloat(mark).toFixed(2) });
+  const btn = $('verifyBtn');
+  btn.classList.add('loading');
+  btn.disabled = true;
 
-                // Mark as submitted in session
-                submittedThisSession.add(name);
+  setTimeout(() => {
+    btn.classList.remove('loading');
+    btn.disabled = false;
 
-                entryCount++;
-                entryCountEl.textContent = entryCount;
-                entryCountEl.style.transform = 'scale(1.3)';
-                setTimeout(() => entryCountEl.style.transform = 'scale(1)', 300);
+    const data = STUDENTS[name];
+    if (!data || pin !== data.pin) {
+      $('pinError').classList.add('show');
+      $('pinInput').value = '';
+      $('pinInput').focus();
+      showToast('Incorrect PIN. Try again.', 'e');
+      return;
+    }
+    $('pinError').classList.remove('show');
+    $('regInput').value = data.reg;
+    $('regDisplay').classList.remove('hidden');
+    currentStudent = { name, reg: data.reg };
 
-                showToast('✅ Successfully saved to Google Sheets!', 'success');
-                form.reset();
-                studentBadge.classList.remove('show');
-                dupWarning.classList.remove('show');
-                submitBtn.disabled = false;
-                nameSelect.focus();
+    setTimeout(() => startExam(), 600);
+  }, 700);
+}
 
-            } catch (err) {
-                console.error(err);
-                if (err.isDuplicate) {
-                    submittedThisSession.add(err.name);
-                    dupMsg.textContent = err.name + ' has already submitted. Only one attempt is allowed.';
-                    dupWarning.classList.add('show');
-                    studentBadge.classList.remove('show');
-                    submitBtn.disabled = true;
-                    showToast('🚫 ' + err.name + ' already has a submission!', 'error');
-                } else {
-                    showToast('❌ Failed to save. Check console or Apps Script deployment.', 'error');
-                }
-            } finally {
-                setLoading(false);
-            }
-        });
+function startExam() {
+  if (submitted.has(currentStudent.name)) {
+    showToast('You have already submitted this exam.', 'e');
+    return;
+  }
+  $('identityCard').style.opacity = '0.5';
+  $('identityCard').style.pointerEvents = 'none';
+  $('examSection').classList.remove('hidden');
+  $('studentName2').textContent = currentStudent.name;
+  answers = new Array(10).fill(null);
+  examActive = true;
+  renderQuestions();
+  startTimer();
+  window.scrollTo({top: $('examSection').offsetTop - 20, behavior:'smooth'});
+}
 
-        document.getElementById('mark').addEventListener('input', function() {
-            const v = parseFloat(this.value);
-            const bad = this.value !== '' && (isNaN(v) || v < 0 || v > 100);
-            this.style.borderColor  = bad ? '#ef4444' : '';
-            this.style.boxShadow    = bad ? '0 0 0 4px rgba(239,68,68,0.08)' : '';
-        });
+function renderQuestions() {
+  const c = $('questionsContainer');
+  c.innerHTML = '';
+  QUESTIONS.forEach((q, qi) => {
+    const div = document.createElement('div');
+    div.className = 'question-card';
+    div.id = 'qcard-' + qi;
+    div.innerHTML = `
+      <div class="q-header">
+        <div class="q-num">${qi+1}</div>
+        <div class="q-text">${q.q}</div>
+      </div>
+      <div class="options" id="opts-${qi}">
+        ${q.opts.map((o,oi)=>`
+          <label class="option" id="opt-${qi}-${oi}" onclick="selectOption(${qi},${oi})">
+            <input type="radio" name="q${qi}" value="${oi}">
+            <span class="option-label">${String.fromCharCode(65+oi)}. ${o}</span>
+          </label>`).join('')}
+      </div>`;
+    c.appendChild(div);
+  });
+}
 
-        nameSelect.focus();
-    })();
-    </script>
+function selectOption(qi, oi) {
+  if (!examActive) return;
+  answers[qi] = oi;
+  const opts = document.querySelectorAll(`#opts-${qi} .option`);
+  opts.forEach((el,i) => el.classList.toggle('selected', i===oi));
+  updateAnsweredCount();
+}
+
+function updateAnsweredCount() {
+  $('answeredCount').textContent = answers.filter(a=>a!==null).length;
+}
+
+function startTimer() {
+  timeLeft = TOTAL_TIME;
+  updateTimer();
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    updateTimer();
+    if (timeLeft <= 0) { clearInterval(timerInterval); submitExam(true); }
+  }, 1000);
+}
+
+function updateTimer() {
+  const m = Math.floor(timeLeft/60).toString().padStart(2,'0');
+  const s = (timeLeft%60).toString().padStart(2,'0');
+  const tv = $('timerVal'), pf = $('progressFill');
+  tv.textContent = `${m}:${s}`;
+  const pct = (timeLeft/TOTAL_TIME)*100;
+  pf.style.width = pct + '%';
+  const danger = timeLeft <= 60, warn = timeLeft <= 300;
+  tv.className = 'timer-val' + (danger?' danger':warn?' warn':'');
+  pf.className = 'progress-fill' + (danger?' danger':warn?' warn':'');
+}
+
+function submitExam(auto=false) {
+  if (!examActive) return;
+  const unanswered = answers.filter(a=>a===null).length;
+  if (!auto && unanswered > 0) {
+    const ok = confirm(`You have ${unanswered} unanswered question(s). Submit anyway?`);
+    if (!ok) {
+      QUESTIONS.forEach((_,i)=>{if(answers[i]===null) $('qcard-'+i).querySelector('.options').classList.add('unanswered-mark');});
+      return;
+    }
+  }
+  clearInterval(timerInterval);
+  examActive = false;
+  submitted.add(currentStudent.name);
+
+  let score = 0;
+  QUESTIONS.forEach((q,i)=>{ if(answers[i]===q.ans) score++; });
+  const mark = Math.round((score/10)*100);
+
+  showResults(score, mark);
+  sendData(currentStudent.name, currentStudent.reg, mark);
+}
+
+function showResults(score, mark) {
+  $('examSection').classList.add('hidden');
+  $('resultsSection').classList.remove('hidden');
+
+  $('scoreNum').textContent = score;
+  $('obtainedMark').textContent = mark;
+
+  const sc = $('scoreCircle');
+  sc.className = 'score-circle';
+  if (score >= 9)      { sc.classList.add('excellent'); $('scoreTitle').textContent = 'Excellent Work!'; $('scoreMsg').textContent = 'Outstanding performance. You passed with flying colors.'; }
+  else if (score >= 7) { sc.classList.add('good');      $('scoreTitle').textContent = 'Good Job!';      $('scoreMsg').textContent = 'Great performance. Keep it up!'; }
+  else if (score >= 5) { sc.classList.add('average');   $('scoreTitle').textContent = 'Passed';         $('scoreMsg').textContent = 'You passed. Review the incorrect answers below.'; }
+  else                 { sc.classList.add('poor');       $('scoreTitle').textContent = 'Needs Improvement'; $('scoreMsg').textContent = 'Keep studying. Review the correct answers below.'; }
+
+  renderReview();
+  window.scrollTo({top: 0, behavior:'smooth'});
+}
+
+function renderReview() {
+  const c = $('reviewContainer');
+  c.innerHTML = '';
+  QUESTIONS.forEach((q,qi) => {
+    const userAns = answers[qi];
+    const correct = q.ans;
+    const isRight = userAns === correct;
+
+    const div = document.createElement('div');
+    div.style.cssText = 'margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border);';
+    if (qi === QUESTIONS.length-1) div.style.borderBottom = 'none';
+
+    let optsHTML = q.opts.map((o,oi)=>{
+      let cls = '';
+      if (oi === correct) cls = 'show-correct';
+      if (oi === userAns && oi !== correct) cls = 'wrong';
+      const badge = oi===correct ? '<span class="option-badge badge-correct">Correct</span>' :
+                    (oi===userAns ? '<span class="option-badge badge-wrong">Your answer</span>' : '');
+      return `<div class="option ${cls}" style="cursor:default;">${String.fromCharCode(65+oi)}. ${o}${badge}</div>`;
+    }).join('');
+
+    div.innerHTML = `
+      <div class="q-header" style="margin-bottom:12px;">
+        <div class="q-num" style="background:${isRight?'var(--success-light)':'var(--error-light)'};color:${isRight?'var(--success)':'var(--error)'};">${qi+1}</div>
+        <div class="q-text">${q.q}</div>
+      </div>
+      <div class="options" style="gap:6px;">${optsHTML}</div>`;
+    c.appendChild(div);
+  });
+}
+
+async function sendData(name, reg, mark) {
+  const fd = new URLSearchParams();
+  fd.append('name', name);
+  fd.append('registration', reg);
+  fd.append('mark', mark);
+  fd.append('timestamp', new Date().toISOString());
+  try {
+    const res = await fetch(SCRIPT_URL, { method:'POST', body:fd, headers:{'Accept':'application/json'} });
+    if (!res.ok) throw new Error('HTTP '+res.status);
+    showToast('Results saved to Google Sheets!', 's');
+  } catch(e) {
+    console.error(e);
+    showToast('Could not save to Sheets. Check script URL.', 'e');
+  }
+}
+</script>
 </body>
 </html>
