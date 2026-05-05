@@ -268,7 +268,7 @@
 
     <script>
     (function() {
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz8PAWhDX6UEkd0cxhY2JdhV9fgv8Ipzk34RJ15nfRPorkLmYUwX9PTBCT383-hv0iHGQ/exec';
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbymtz83_hL-bnrTLPc1eCHoGU0b74wH3s22f15Uk_YwfZwfcQ1bpifhLrTMmvAEFlrU/exec';
 
         // ── Feature 2: track submitted names THIS session ──
         const submittedThisSession = new Set();
@@ -362,7 +362,13 @@
             });
             if (!res.ok) throw new Error('HTTP ' + res.status);
             const ct = res.headers.get('content-type') || '';
-            return ct.includes('application/json') ? await res.json() : { raw: await res.text() };
+            const result = ct.includes('application/json') ? await res.json() : { raw: await res.text() };
+
+            // ── HARD BLOCK: server said duplicate ──
+            if (result.status === 'duplicate') {
+                throw { isDuplicate: true, name: data.name };
+            }
+            return result;
         }
 
         function validateMark(v) {
@@ -430,7 +436,16 @@
 
             } catch (err) {
                 console.error(err);
-                showToast('❌ Failed to save. Check console or Apps Script deployment.', 'error');
+                if (err.isDuplicate) {
+                    submittedThisSession.add(err.name);
+                    dupMsg.textContent = err.name + ' has already submitted. Only one attempt is allowed.';
+                    dupWarning.classList.add('show');
+                    studentBadge.classList.remove('show');
+                    submitBtn.disabled = true;
+                    showToast('🚫 ' + err.name + ' already has a submission!', 'error');
+                } else {
+                    showToast('❌ Failed to save. Check console or Apps Script deployment.', 'error');
+                }
             } finally {
                 setLoading(false);
             }
